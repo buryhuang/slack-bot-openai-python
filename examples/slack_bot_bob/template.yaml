@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Slack Bot Lambda Function
+
+Parameters:
+  SlackBotToken:
+    Type: String
+    Description: Slack Bot User OAuth Token
+    NoEcho: true
+  SlackSigningSecret:
+    Type: String
+    Description: Slack Signing Secret
+    NoEcho: true
+  OpenAIApiKey:
+    Type: String
+    Description: OpenAI API Key
+    NoEcho: true
+  OpenAIBaseUrl:
+    Type: String
+    Description: Optional OpenAI Base URL
+    Default: ''
+  OpenAIModel:
+    Type: String
+    Description: OpenAI Model Name
+    Default: 'gpt-4o'
+
+Resources:
+  ProcessedMessagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: slack-bot-processed-messages
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: client_msg_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: client_msg_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  SlackBotFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: python3.11
+      ProjectRoot: .
+      Manifest: requirements.txt
+    Properties:
+      FunctionName: peakmojo-slack-bot-bob
+      CodeUri: .
+      Handler: handler.lambda_handler
+      Runtime: python3.11
+      Timeout: 900
+      MemorySize: 512
+      Environment:
+        Variables:
+          SLACK_BOT_TOKEN: !Ref SlackBotToken
+          SLACK_SIGNING_SECRET: !Ref SlackSigningSecret
+          OPENAI_API_KEY: !Ref OpenAIApiKey
+          OPENAI_BASE_URL: !Ref OpenAIBaseUrl
+          OPENAI_MODEL: !Ref OpenAIModel
+          DYNAMODB_TABLE: !Ref ProcessedMessagesTable
+      Policies:
+        - CloudWatchLogsFullAccess
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+              Resource: !GetAtt ProcessedMessagesTable.Arn
+      AutoPublishAlias: live
+
+  SlackBotFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt SlackBotFunction.Arn
+      Cors:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - POST
+        AllowHeaders:
+          - '*'
+        ExposeHeaders:
+          - '*'
+        MaxAge: 86400
+
+  SlackBotFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref SlackBotFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+Outputs:
+  SlackBotUrl:
+    Description: URL for the Slack Bot Lambda Function
+    Value: !GetAtt SlackBotFunctionUrl.FunctionUrl
+  ProcessedMessagesTableName:
+    Description: Name of the DynamoDB table for processed messages
+    Value: !Ref ProcessedMessagesTable
