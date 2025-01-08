@@ -44,7 +44,7 @@ Let me tell you why this bot is different from others out there:
 
 6. **Future-Proof & Extensible 🔮**
    - While keeping the core simple, the project is designed to be extensible
-   - Additional integrations through MCP-Bridge
+   - Additional integrations through [MCP-Bridge](https://github.com/SecretiveShell/MCP-Bridge)
    - Supports hundreds of integrations using the same OpenAI format
 
 ## 📚 Complete Working Example
