@@ -25,9 +25,9 @@ Let me tell you why this bot is different from others out there:
    - Eliminates the need for costly EC2 instances or self-hosting
    - Addresses all Lambda-specific challenges out of the box
 
-3. **Always Up-to-Date 📈**
+3. **Using Latest OpenAI SDK**
    - Many existing solutions use outdated OpenAI versions
-   - We maintain compatibility with the latest OpenAI Python SDK (v1.59.5)
+   - We maintain compatibility with the latest OpenAI Python SDK (v1.59.5) as much as we can.
    - Stays current with the latest LLM advancements
 
 4. **Simple Yet Powerful 💪**
